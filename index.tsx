@@ -513,6 +513,65 @@ class ToastMessage extends LitElement {
   }
 }
 
+// LoadingIndicator component
+// -----------------------------------------------------------------------------
+@customElement('loading-indicator')
+class LoadingIndicator extends LitElement {
+  static override styles = css`
+    :host {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5vmin;
+      background: rgba(20, 20, 20, 0.85);
+      padding: 4vmin 6vmin;
+      border-radius: 1.5vmin;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+    :host([visible]) {
+      opacity: 1;
+    }
+    .spinner {
+      width: 4vmin;
+      height: 4vmin;
+      border: 0.5vmin solid rgba(255, 255, 255, 0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .text {
+      color: #fff;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 1.8vmin;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+
+  @property({type: Boolean}) visible = false;
+
+  override render() {
+    return html`
+      <div class="spinner"></div>
+      <div class="text">Buffering...</div>
+    `;
+  }
+}
+
 /** A single prompt input */
 @customElement('prompt-controller')
 class PromptController extends LitElement {
@@ -922,7 +981,7 @@ class SettingsController extends LitElement {
     }
   `;
 
-  private readonly defaultConfig = {
+  private readonly defaultConfig: LiveMusicGenerationConfig = {
     temperature: 1.1,
     topK: 40,
     guidance: 4.0,
@@ -1346,7 +1405,7 @@ class PromptDj extends LitElement {
   private nextPromptId: number; // Monotonically increasing ID for new prompts
   private session: LiveMusicSession;
   private readonly sampleRate = 48000;
-  private audioContext = new (window.AudioContext || window.webkitAudioContext)(
+  private audioContext = new (window.AudioContext || (window as any).webkitAudioContext)(
     {sampleRate: this.sampleRate},
   );
   private outputNode: GainNode = this.audioContext.createGain();
@@ -1663,6 +1722,7 @@ class PromptDj extends LitElement {
       backgroundImage: this.makeBackground(),
     });
     return html`<div id="background" style=${bg}></div>
+      <loading-indicator ?visible=${this.playbackState === 'loading'}></loading-indicator>
       <div class="prompts-area">
         <div
           id="prompts-container"
@@ -1774,5 +1834,6 @@ declare global {
     'reset-button': ResetButton;
     'weight-slider': WeightSlider;
     'toast-message': ToastMessage;
+    'loading-indicator': LoadingIndicator;
   }
 }
